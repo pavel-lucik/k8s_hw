@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-redirect
+spec:
+  type: ExternalName
+  externalName: jenkins.io

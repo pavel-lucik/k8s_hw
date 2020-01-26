@@ -1,0 +1,11 @@
+kubectl apply -f ./jenkins_password.yaml
+kubectl create configmap jenkins.plugin --from-file=plugins.txt
+kubectl create configmap jenkins.jobs --from-file=testjob1 --from-file=testjob2
+kubectl apply -f jenkins_volumeclaim.yaml
+kubectl create -f jenkins_deployment.yaml
+kubectl create -f sonar_deployment.yaml
+kubectl create -f jenkins_service.yaml
+kubectl create -f sonar_service.yaml
+
+kubectl create secret tls jenkins-tls-secret --cert test_cert/jenkins-ingress-1.crt --key test_cert/jenkins-ingress-1.key
+kubectl create secret tls sonar-tls-secret --cert test_cert/sonar-ingress-1.crt --key test_cert/sonar-ingress-1.key

@@ -1,0 +1,74 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: jenkins-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JENKINS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins.secret
+              key: password
+        volumeMounts:
+        - name: plugin-list
+          mountPath: /var/jenkins_config
+        - name: share-volume
+          mountPath: /var/jenkins_plugins
+        - name: jenkins-persistent-storage
+          mountPath: /var/jenkins_home
+      initContainers:
+      - name: init-jenkins
+        image: jenkins
+        volumeMounts:
+        - name: plugin-list
+          mountPath: /var/jenkins_config
+        - name: job-list
+          mountPath: /var/jenkins_jobs
+        - name: jenkins-persistent-storage
+          mountPath: /var/jenkins_home
+        - name: share-volume
+          mountPath: /var/jenkins_plugins
+        command: ['sh', '-c']
+        args:
+        - cp /var/jenkins_config/plugins.txt /var/jenkins_home;
+          rm -rf /usr/share/jenkins/ref/plugins/*.lock;
+          /usr/local/bin/install-plugins.sh `echo $(cat /var/jenkins_home/plugins.txt)`;
+          yes n | cp -i /usr/share/jenkins/ref/plugins/* /var/jenkins_plugins/;
+          for job in `ls /var/jenkins_jobs`;
+          do mkdir -p /var/jenkins_home/jobs/$job;
+          yes | cp -i /var/jenkins_jobs/$job /var/jenkins_home/jobs/$job/config.xml;
+          done;
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: plugin-list
+        configMap:
+          name: jenkins.plugin
+      - name: job-list
+        configMap:
+          name: jenkins.jobs
+      - name: share-volume
+        emptyDir: {}
+      - name: jenkins-persistent-storage
+        persistentVolumeClaim:
+          claimName: jenkins-volumeclaim

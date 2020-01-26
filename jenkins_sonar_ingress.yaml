@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins-sonar-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  tls:
+  - secretName: jenkins-tls-secret
+  - secretName: sonar-tls-secret
+  rules:
+  - host: jenkins.example.com
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: jenkins-service
+          servicePort: 80
+  - host: sonar.example.com
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: sonar-service 
+          servicePort: 9000

@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  #annotations:
+  #kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: jenkins-service
+          servicePort: 80
+      - path: /moreinfo/*
+        backend:
+          serviceName: http-svc
+          servicePort: 80
